@@ -498,21 +498,19 @@ void CHttpClient::Process()
 							Disconnect();
 							return;
 						}
-
-						// Do we not have any data?
-						if(iBytesRecieved == 0)
-							return;
 					}
 
 					// Skip the header data if we have any
 					char * szData = (iBytesRecieved ? (szBuffer + iHeaderSize) : NULL);
 
+					m_strData.Append(szData, iBytesRecieved);
+
 					// Call the receive handler if we have one
 					if(m_pfnReceiveHandler)
 					{
-						if(m_pfnReceiveHandler(szData, iBytesRecieved, m_pReceiveHandlerUserData))
-							m_strData.Append(szData, iBytesRecieved);
+						m_pfnReceiveHandler(szData, iBytesRecieved, m_pReceiveHandlerUserData);
 					}
+
 					// Write response data to file if we have one set
 					else if(m_fFile != NULL)
 						fwrite(szData, 1, iBytesRecieved, m_fFile);
