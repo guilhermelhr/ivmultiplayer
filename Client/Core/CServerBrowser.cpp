@@ -190,7 +190,7 @@ void CServerBrowser::ServerQueryHandler(String strHost, unsigned short usPort, S
 		pMultiColumnList->setItem(new ServerBrowserListItem(strHostName.Get()), 0, iRowIndex);
 		pMultiColumnList->setItem(new ServerBrowserListItem(strHostAndPort.Get()), 1, iRowIndex);
 		char szPlayerCount[9];
-		sprintf(szPlayerCount, "%s/%s", iPlayerCount, iMaxPlayers);
+		sprintf(szPlayerCount, "%d/%d", iPlayerCount, iMaxPlayers);
 		pMultiColumnList->setItem(new ServerBrowserListItem(szPlayerCount), 2, iRowIndex);
 		pMultiColumnList->setItem(new ServerBrowserListItem("9999"), 3, iRowIndex);
 		pMultiColumnList->setItem(new ServerBrowserListItem(bPassworded ? "Yes" : "No"), 4, iRowIndex);
@@ -289,15 +289,15 @@ bool CServerBrowser::OnConnectButtonClick(const CEGUI::EventArgs &eventArgs)
 	SetVisible(false);
 
 	// Does this server require a password?
-	if(pPassworded->getText() == "yes")
+	/*if(pPassworded->getText() == "yes")
 	{
 		// TODO: Show password entry window
 	}
 	else
-	{
+	{*/
 		// Call the connect function
 		CMainMenu::GetSingleton()->OnConnect(strHost, usPort, "");
-	}
+	//}
 
 	return true;
 }
