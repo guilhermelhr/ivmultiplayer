@@ -36,7 +36,7 @@ void CMasterListQuery::Reset()
 
 bool CMasterListQuery::Query(int iType)
 {
-	String strPostPath(MASTERLIST_LIST_PATH);
+	String strPostPath(CSettings::GetString("masterlistpath"));
 	String version("?version=");
 	version += m_strVersion;
 	strPostPath += version;
