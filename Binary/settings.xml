@@ -20,6 +20,15 @@
 	<!-- Allow the server to be queried -->
 	<query>true</query>
 
+	<!-- The masterlist address that the server will be listed at -->
+	<masterlist>s1058057.instanturl.net</masterlist>
+
+	<!-- Port the masterlist listens on -->
+	<masterlistport>80</masterlistport>
+
+	<!-- Path for the add http request -->
+	<masterlistpath>/add.php</masterlistpath>
+
 	<!-- Add the server to the master list -->
 	<listed>true</listed>
 

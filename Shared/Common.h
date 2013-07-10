@@ -139,8 +139,11 @@ typedef unsigned char DimensionId;
 #define MASTERLIST_VERSION ""
 #define MASTERLIST_TIMEOUT 0
 #else if COMPILE_MODE == COMPILE_MODE_RELEASE
-#define MASTERLIST_ADDRESS "s1058057.instanturl.net"
 #define MASTERLIST_VERSION "01RC3"
+#define MASTERLIST_ADDRESS "s1058057.instanturl.net"
+#define MASTERLIST_LIST_PATH "/list.php"
+#define MASTERLIST_ADD_PATH "/add.php"
+#define MASTERLIST_PORT 80
 #define MASTERLIST_TIMEOUT 50000
 #endif
 

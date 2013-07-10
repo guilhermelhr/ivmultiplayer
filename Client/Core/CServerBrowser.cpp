@@ -9,6 +9,7 @@
 #include "CServerBrowser.h"
 #include "CClient.h"
 #include "CGame.h"
+#include <CSettings.h>
 
 extern CClient * g_pClient;
 CServerBrowser * CServerBrowser::m_pSingleton = NULL;
@@ -33,7 +34,7 @@ CServerBrowser::CServerBrowser(void)
 	m_pSingleton = this;
 
 	// Create the master list query instance and set its handler
-	m_pMasterListQuery = new CMasterListQuery(MASTERLIST_ADDRESS, MASTERLIST_VERSION);
+	m_pMasterListQuery = new CMasterListQuery(CSettings::GetString("masterlist"), MASTERLIST_VERSION);
 	m_pMasterListQuery->SetMasterListQueryHandler(MasterListQueryHandler);
 
 	// Create the server query instance and set its handler

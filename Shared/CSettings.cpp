@@ -50,6 +50,7 @@ void CSettings::LoadDefaults()
 	AddList("clientresource");
 	AddList("module");
 	AddList("config");
+	AddString("masterlistpath", MASTERLIST_ADD_PATH);
 #else
 	AddString("ip", "127.0.0.1");
 	AddInteger("port", 9999, 1024, 65535);
@@ -63,7 +64,10 @@ void CSettings::LoadDefaults()
 	AddInteger("chatbgr", 0, 0, 255);
 	AddInteger("chatbgg", 0, 0, 255);
 	AddInteger("chatbgb", 0, 0, 255);
+	AddString("masterlistpath", MASTERLIST_LIST_PATH);
 #endif
+	AddString("masterlist", MASTERLIST_ADDRESS);
+	AddInteger("masterlistport", MASTERLIST_PORT, 1, 65535);
 }
 
 SettingsValue * CSettings::GetSetting(String strSetting)

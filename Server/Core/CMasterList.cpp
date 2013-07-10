@@ -10,14 +10,16 @@
 #include "CMasterList.h"
 #include <SharedUtility.h>
 #include <CLogFile.h>
+#include <CSettings.h>
 
 CMasterList::CMasterList(String strHost, String strVersion, unsigned long ulTimeout, int iServerPort)
 {
 	m_pHttpClient = new CHttpClient();
 	m_pHttpClient->SetRequestTimeout(10000);
 	m_pHttpClient->SetHost(strHost);
+	m_pHttpClient->SetPort(CSettings::GetInteger("masterlistport"));
 	m_ulLastPulse = NULL;
-	m_strPostPath.Format("/add.php?version=%s&port=%d", strVersion.Get(), iServerPort);
+	m_strPostPath.Format(CSettings::GetString("masterlistpath") + "?version=%s&port=%d", strVersion.Get(), iServerPort);
 	m_ulTimeout = ulTimeout;
 	m_bSentListedMessage = false;
 	m_bSentErrorMessage = false;
@@ -78,12 +80,8 @@ void CMasterList::Pulse()
 
 					if(m_pHttpClient->GetData()->IsEmpty())
 						strError = "No data received";
-					if(*m_pHttpClient->GetData() == "ERROR: Banned")
-						strError = "You are banned from listing this server";
-					else if(*m_pHttpClient->GetData() == "ERROR: Invalid port")
-						strError = "You have specified an invalid port";
-					else if(*m_pHttpClient->GetData() == "ERROR: Invalid version")
-						strError = "You have specified an invalid version";
+					else
+						strError = *m_pHttpClient->GetData();
 
 					CLogFile::Printf("[Master List] Failed to post server to server list (%s)!", strError.Get());
 					m_bSentErrorMessage = true;

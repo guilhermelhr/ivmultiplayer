@@ -387,7 +387,7 @@ bool CServer::OnLoad(int argc, char ** argv)
 #endif
 
 	if(CVAR_GET_BOOL("listed"))
-		g_pMasterList = new CMasterList(MASTERLIST_ADDRESS, MASTERLIST_VERSION, MASTERLIST_TIMEOUT, CVAR_GET_INTEGER("port"));
+		g_pMasterList = new CMasterList(CVAR_GET_STRING("masterlist"), MASTERLIST_VERSION, MASTERLIST_TIMEOUT, CVAR_GET_INTEGER("port"));
 
 #ifdef WIN32
 	SetConsoleTextAttribute((HANDLE)GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_GREEN | FOREGROUND_INTENSITY);

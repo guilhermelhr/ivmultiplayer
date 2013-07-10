@@ -11,12 +11,15 @@
 
 #include "CMasterListQuery.h"
 #include <CLogFile.h>
+#include <Common.h>
+#include <CSettings.h>
 
 CMasterListQuery::CMasterListQuery(String strHost, String strVersion)
 {
 	m_pHttpClient = new CHttpClient();
 	m_pHttpClient->SetRequestTimeout(10000);
 	m_pHttpClient->SetHost(strHost);
+	m_pHttpClient->SetPort(CSettings::GetInteger("masterlistport"));
 	m_strVersion = strVersion;
 	m_pfnMasterListQueryHandler = NULL;
 }
@@ -33,7 +36,10 @@ void CMasterListQuery::Reset()
 
 bool CMasterListQuery::Query(int iType)
 {
-	String strPostPath("/list.php?version=01RC3");
+	String strPostPath(MASTERLIST_LIST_PATH);
+	String version("?version=");
+	version += m_strVersion;
+	strPostPath += version;
 
 	if(!m_pHttpClient->Get(strPostPath))
 	{

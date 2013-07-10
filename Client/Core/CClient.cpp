@@ -200,7 +200,7 @@ bool CClient::OnLoad()
 	// Initialize the http client
 	m_pHttpClient = new CHttpClient();
 	m_pHttpClient->SetRequestTimeout(10000);
-	m_pHttpClient->SetHost(MASTERLIST_ADDRESS);
+	m_pHttpClient->SetHost(CSettings::GetString("masterlist"));
 	return true;
 }
 
