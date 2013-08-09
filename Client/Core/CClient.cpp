@@ -77,6 +77,8 @@ bool CClient::OnLoad()
 	m_strPassword = CVAR_GET_STRING("pass");
 	m_bWindowedMode = CVAR_GET_BOOL("windowed");
 	m_bFPSToggle = CVAR_GET_BOOL("fps");
+	m_strConnectHost = CVAR_GET_STRING("currentconnect_server");
+	m_usConnectPort = CVAR_GET_INTEGER("currentconnect_port");
 
 	// IE9 fix - disabled if disableie9fix is set or shift is pressed
 	if(!CVAR_GET_BOOL("disableie9fix") || GetAsyncKeyState(VK_SHIFT) > 0)
@@ -199,8 +201,8 @@ bool CClient::OnLoad()
 
 	// Initialize the http client
 	m_pHttpClient = new CHttpClient();
-	m_pHttpClient->SetRequestTimeout(10000);
-	m_pHttpClient->SetHost(CSettings::GetString("masterlist"));
+    m_pHttpClient->SetRequestTimeout(10000);
+    m_pHttpClient->SetHost(CSettings::GetString("masterlist"));
 	return true;
 }
 
@@ -355,6 +357,16 @@ void CClient::OnD3DEndScene()
 			{
 				String strPostPath("/getlatestversion.php");
 				m_pHttpClient->Get(strPostPath);
+
+				if(strcmp(m_strConnectHost,"0.0.0.0"))
+				{
+					// Send connect event
+					m_pMainMenu->OnDirectConnect(m_strConnectHost,m_usConnectPort);
+
+					// Remove current connect entries from xml file
+					CVAR_SET_STRING("currentconnect_server","0.0.0.0");
+					CVAR_SET_INTEGER("currentconnect_port",9999);
+                }
 			}
 		}
 	}
@@ -445,6 +457,17 @@ void CClient::OnD3DEndScene()
 					m_pGUI->ShowMessageBox(String("A new version of IV:MP is available (Version %s)", strData->Get()).Get(), "New Version available");
 			}
 #endif
+			// Did we get any data?
+			if(!strData->IsEmpty())
+			{
+#ifndef IVMP_DEBUG
+				if(strcmp(strData->Get(), MOD_VERSION_STRING))
+				{
+					if(m_pGUI)
+						m_pGUI->ShowMessageBox(String("A new version of IV:MP is available (Version %s)", strData->Get()).Get(), "New Version available");
+				}
+#endif
+			}
 		}
 	}
 
@@ -685,32 +708,20 @@ void CClient::OnGameProcess()
 	if(m_pNetworkManager)
 		m_pNetworkManager->Process();
 
-	// HACKY!
+    // HACKY! FIXME, for real
 	// TEMP! TODO: Anywhere in GTA there's a function which checks if the engine is turned on or off...
 	//		       ...If the player is in the vehicle, it will turn it automatic on -.-
 	if(m_pLocalPlayer)
 	{
 		if(m_pLocalPlayer->GetVehicle())
 		{
-			// TEMP! TODO: Anywhere in GTA there's a function which checks if the engine is turned on or off...
-			//		 ...If the player is in the vehicle, it will turn it automatic on -.-
+
 			// jenksta: Then find all references to CVehicle::TurnEngineOn and find which call is for when 
 			// the player enters the vehicle?
-			if(!m_pLocalPlayer->GetVehicle()->GetEngineState())
+			if(m_pLocalPlayer->GetVehicle()->GetEngineState() == false)
 				m_pLocalPlayer->GetVehicle()->SetEngineState(false);
 		}
-	}
-	for(EntityId playerId = 0; playerId < MAX_PLAYERS; playerId++)
-	{
-		if(m_pPlayerManager->DoesExist(playerId))
-		{
-			if(m_pPlayerManager->GetAt(playerId)->GetVehicle() != NULL)
-			{
-				if(!m_pPlayerManager->GetAt(playerId)->GetVehicle()->GetEngineState() != NULL)
-					m_pPlayerManager->GetAt(playerId)->GetVehicle()->SetEngineState(false);
-			}
-		}
-	}
+    }
 
 	// If we have text to draw draw it
 	if(iTextTime > 0)

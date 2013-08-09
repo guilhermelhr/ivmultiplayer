@@ -49,11 +49,13 @@ void CSettings::LoadDefaults()
 	AddList("clientscript");
 	AddList("clientresource");
 	AddList("module");
-	AddList("config");
-	AddString("masterlistpath", MASTERLIST_ADD_PATH);
+    AddList("config");
+    AddString("masterlistpath", MASTERLIST_ADD_PATH);
 #else
 	AddString("ip", "127.0.0.1");
 	AddInteger("port", 9999, 1024, 65535);
+	AddString("currentconnect_server", "0.0.0.0");
+	AddInteger("currentconnect_port", 9999, 1024, 65535);
 	AddString("nick", "player");
 	AddString("pass", "");
 	AddBool("windowed", false);

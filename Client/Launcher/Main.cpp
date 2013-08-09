@@ -20,6 +20,28 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	char szInstallDirectory[MAX_PATH];
 	bool bFoundCustomDirectory = false;
 
+	std::string strReNewEntries = lpCmdLine;
+
+	// Check if protocol 'ivmp' and 'ivmultiplayer' is avaiable in registry
+	if(!SharedUtility::ReadRegistryString(HKEY_CLASSES_ROOT, "ivmp", NULL, "", NULL, NULL)
+		|| !SharedUtility::ReadRegistryString(HKEY_CLASSES_ROOT, "ivmultiplayer", NULL, "", NULL, NULL)
+		|| strReNewEntries.find("-renewprotocol") != std::string::npos)
+	{
+		// Update
+		SharedUtility::WriteRegistryString(HKEY_CLASSES_ROOT,"ivmp","","IVMultiplayer",strlen("IVMultiplayer"));
+		SharedUtility::WriteRegistryString(HKEY_CLASSES_ROOT,"ivmultiplayer","","IVMultiplayer",strlen("IVMultiplayer"));
+		
+		String strcommand = String("\"%s\" \"%%1\"",SharedUtility::GetAbsolutePath("Client.Launcher.exe"));
+
+		SharedUtility::WriteRegistryString(HKEY_CLASSES_ROOT,"ivmp","Url Protocol","",0);
+		SharedUtility::WriteRegistryString(HKEY_CLASSES_ROOT,"ivmp\\shell\\open\\command\\","",strcommand.GetData(),strcommand.GetLength());
+		SharedUtility::WriteRegistryString(HKEY_CLASSES_ROOT,"ivmp\\DefaultIcon","",String("Client.Launcher.exe,1").GetData(),strlen("Client.Launcher.exe,1"));
+
+		SharedUtility::WriteRegistryString(HKEY_CLASSES_ROOT,"ivmultiplayer","Url Protocol","",0);
+		SharedUtility::WriteRegistryString(HKEY_CLASSES_ROOT,"ivmultiplayer\\shell\\open\\command\\","",strcommand.GetData(),strcommand.GetLength());
+		SharedUtility::WriteRegistryString(HKEY_CLASSES_ROOT,"ivmultiplayer\\DefaultIcon","",String("Client.Launcher.exe,1").GetData(),strlen("Client.Launcher.exe,1"));
+	}
+
 	// TODO: Steam registry entry support
 	if(!SharedUtility::ReadRegistryString(HKEY_LOCAL_MACHINE, "Software\\Rockstar Games\\Grand Theft Auto IV", 
 		"InstallFolder", NULL, szInstallDirectory, sizeof(szInstallDirectory)) || 
@@ -139,8 +161,102 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		}
 	}
 
+	// Check if we have an server connect command
+	String strServer, strPort;
+	std::string strServerCheck = String(lpCmdLine);
+	std::size_t sizetCMDFound = strServerCheck.find("-ivmp");// -[1]i[2]v[3]m[4]p[5]*space*[6]***.***.***.***
+	int iOffset = 0;
+	bool bCommandFound = false;
+	String strNewCommandLine = lpCmdLine;
+	
+	// Check for shortcut commandline
+	if(sizetCMDFound != std::string::npos)
+	{
+		iOffset = 6;
+		bCommandFound = true;
+	}
+
+	// Check for ivmp protocol
+	if(!bCommandFound)
+	{
+		sizetCMDFound = strServerCheck.find("ivmp://"); // i[1]v[2]m[3]p[4]:[5]/[6]/[7]***.***.***
+		if(sizetCMDFound != std::string::npos)
+		{
+			 iOffset = 7;
+			 bCommandFound = true;
+		}
+	}
+	
+	// Check for ivmultiplayer protocol
+	if(!bCommandFound)
+	{
+		sizetCMDFound = strServerCheck.find("ivmultiplayer://");// i[1]v[2]m[3]u[4]l[5]t[6]i[7]p[8]l[9]a[10]y[11]e[12]r[13]:[14]/[15]/[16]***.***.***
+		if(sizetCMDFound != std::string::npos)
+		{
+			 iOffset = 16;
+			 bCommandFound = true;
+		}
+	}
+
+	// Open default clientsettings
+	CSettings::Open(SharedUtility::GetAbsolutePath("clientsettings.xml"));
+
+	// If we have found an direct connect force
+	if(bCommandFound)
+	{
+		std::string strServerInst = strServerCheck.substr(sizetCMDFound+iOffset,strServerCheck.length());
+		std::size_t sizetCMDFound_2 = strServerInst.find(":");
+
+		// Have we an : in our instruction
+		if(sizetCMDFound_2 != std::string::npos) 
+		{
+			// Grab our connect data
+			strServer = String("%s",strServerInst.substr(0,sizetCMDFound_2).c_str());
+			strPort = String("%s",strServerInst.substr(sizetCMDFound_2+1,strServerInst.length()).c_str());
+
+			// Parse the command line
+			CSettings::ParseCommandLine(GetCommandLine());
+
+			// Write connect data to settings xml
+			CVAR_SET_STRING("currentconnect_server",strServer.Get());
+			CVAR_SET_INTEGER("currentconnect_port",strPort.ToInteger());
+			
+			// Generate new commandline
+			strNewCommandLine = String("%s -directconnect", lpCmdLine);
+		}
+		else // Something is wrong with our URI
+		{
+			if(ShowMessageBox("Something is wrong with your server direct-connect URI, do you want to start IV:MP without direct-connect?", MB_ICONQUESTION | MB_YESNO ) == IDYES)
+			{
+				// Set default server direct connect values
+				CVAR_SET_STRING("currentconnect_server","0.0.0.0");
+				CVAR_SET_INTEGER("currentconnect_port",9999);
+
+				strNewCommandLine = lpCmdLine;
+			}
+			else // Terminate IV:MP
+			{
+				if(!SharedUtility::_TerminateProcess("Client.Launcher.exe"))
+				{
+					return ShowMessageBox("LaunchGTAIV.exe could not be terminated. Cannot launch IV: Multiplayer.");
+				}
+			}
+
+		}
+	}
+	else
+	{
+		CSettings::ParseCommandLine(GetCommandLine());
+		// If we haven't found a server connect command, delte the old instructions( if the client had crashed before )
+		CVAR_SET_STRING("currentconnect_server","0.0.0.0");
+		CVAR_SET_INTEGER("currentconnect_port",9999);
+	}
+	
+	// Close settings...
+	CSettings::Close();
+
 	// Generate the command line
-	String strCommandLine("%s %s", strApplicationPath.Get(), lpCmdLine);
+	String strCommandLine("%s %s", strApplicationPath.Get(), strNewCommandLine.Get());
 
 	// Start LaunchGTAIV.exe
 	STARTUPINFO siStartupInfo;
